@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>Document</title>
+  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css"
+    integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">
+</head>
+
+<body>
+  <div class="jumbotron">
+    <h1 class="display-4">Trivia Game</h1>
+    <p class="lead">Choose a trivia category to begin!</p>
+    <hr class="my-4">
+    <div class="btn-group">
+      <button id="category-dropdown-toggle" type="button" class="btn btn-primary dropdown-toggle" data-toggle="dropdown"
+        aria-haspopup="true" aria-expanded="false">
+        General Knowledge
+      </button>
+      <div id="category-dropdown" class="dropdown-menu">
+      </div>
+    </div>
+    <button id="beginTrivia" class="btn btn-success btn-large">Begin Game!</button>
+  </div>
+  <div id="game">
+
+  </div>
+  <div id="results" class="modal" tabindex="-1" role="dialog">
+    <div class="modal-dialog" role="document">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 id="gameResult" class="modal-title"></h5>
+          <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+          </button>
+        </div>
+        <div class="modal-body">
+          <p id="resultCount"></p>
+        </div>
+        <div class="modal-footer">
+          <button id="closeResult" type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <script src="https://code.jquery.com/jquery-3.4.1.js" integrity="sha256-WpOohJOqMqqyKL9FccASB9O0KwACQJpFTUBLTYOVvVU="
+    crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js"
+    integrity="sha384-Q6E9RHvbIyZFJoft+2mJbHaEWldlvI9IOYy5n3zV9zzTtmI3UksdQRVvoxMfooAo"
+    crossorigin="anonymous"></script>
+  <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.min.js"
+    integrity="sha384-wfSDF2E50Y2D1uUdj0O3uMBJnjuUD4Ih7YwaYd1iqfktj0Uod8GCExl3Og8ifwB6"
+    crossorigin="anonymous"></script>
+  <script>
+
+    let chosenCategory = 9
+    let questions = []
+
+    const renderQuestions = () => {
+      questions.forEach(({ question, correct_answer, incorrect_answers }, i) => {
+        incorrect_answers.push(correct_answer)
+        let choices = incorrect_answers.sort((a, b) => a - b)
+        $('#game').append($(`
+          <div class="card">
+            <div class="card-header">
+             Question #${i + 1}
+            </div>
+            <div class="card-body">
+              <h5 class="card-title">${question}</h5>
+              <ul class="list-group list-group-flush">
+                ${
+                  incorrect_answers.map(choice => `<li class="list-group-item choice" data-choice="${choice}" data-question="${i}">${choice}</li>`).join(' ')
+                }
+              </ul>
+            </div>
+          </div>
+        `))
+      })
+      // $('#game').append('<button id="finishGame" class="btn btn-success btn-large" data-toggle="modal" data-target="results">Finish</button>')
+      $('#game').append(`
+      <div class="card">
+            <div class="card-body">
+              <ul class="list-group list-group-flush">
+                <li class="list-group-item">
+                  <button id="finishGame" class="btn btn-success btn-large" data-toggle="modal" data-target="results">Finish</button>
+                </li>
+              </ul>
+            </div>
+          </div>
+      `)
+    }
+
+    const categorySelect = (id, name) => {
+      $('#category-dropdown-toggle').text(name)
+      chosenCategory = parseInt(id)
+    }
+
+    $.get('https://opentdb.com/api_category.php')
+      .then(({ trivia_categories: categories }) => {
+        categories.forEach(({ id, name }) => {
+          $('#category-dropdown').append($(`<a class="dropdown-item category" href="#" data-id="${id}" data-name="${name}">${name}</a>`))
+        })
+      })
+      .catch(e => console.error(e))
+
+    $(document).click(event => event.target.classList.contains('category') ? categorySelect(event.target.dataset.id, event.target.dataset.name) : null)
+
+    $('#beginTrivia').click(event => {
+      $.get(`https://opentdb.com/api.php?amount=10&category=${chosenCategory}&type=multiple`)
+        .then(({ results }) => {
+          questions = results
+          renderQuestions()
+        })
+        .catch(e => console.error(e))
+    })
+
+    $(document).click(event => {
+      if (event.target.classList.contains('choice')) {
+        $(event.target).css({ backgroundColor: 'blue' })
+        $(event.target).siblings().css({ backgroundColor: 'white' })
+        questions[event.target.dataset.question].chosen = event.target.dataset.choice
+      } else if (event.target.id === 'finishGame') {
+        let correct = questions.filter(({ correct_answer, chosen }) => correct_answer === chosen)
+        $('#gameResult').text('Great Job!')
+        $('#resultCount').text(`You got ${correct.length} out of ${questions.length} questions right!`)
+        $('#results').modal()
+      } else if (event.target.id === 'closeResult') {
+        questions = []
+        chosenCategory = 9
+        $('#category-dropdown-toggle').text('General Knowledge')
+        $('#game').html('')
+      }
+    })
+  </script>
+</body>
+
+</html>
