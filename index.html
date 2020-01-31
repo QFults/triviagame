@@ -131,6 +131,8 @@
         let correct = questions.filter(({ correct_answer, chosen }) => correct_answer === chosen)
         $('#gameResult').text('Great Job!')
         $('#resultCount').text(`You got ${correct.length} out of ${questions.length} questions right!`)
+        $('#correctResults').html('')
+        $('#incorrectResults').html('')
         questions.forEach(({ question, correct_answer, chosen }) => {
           if (correct_answer === chosen) {
             $('#correctResults').append($(`<li class="list-group-item" style="background-color: lightgreen">
