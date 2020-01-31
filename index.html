@@ -119,7 +119,7 @@
 
     $(document).click(event => {
       if (event.target.classList.contains('choice')) {
-        $(event.target).css({ backgroundColor: 'blue' })
+        $(event.target).css({ backgroundColor: 'grey' })
         $(event.target).siblings().css({ backgroundColor: 'white' })
         questions[event.target.dataset.question].chosen = event.target.dataset.choice
       } else if (event.target.id === 'finishGame') {
