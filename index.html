@@ -40,6 +40,10 @@
         </div>
         <div class="modal-body">
           <p id="resultCount"></p>
+          <ul id="correctResults" class="list-group">
+          </ul>
+          <ul id="incorrectResults" class="list-group">
+          </ul>
         </div>
         <div class="modal-footer">
           <button id="closeResult" type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
@@ -73,14 +77,13 @@
               <h5 class="card-title">${question}</h5>
               <ul class="list-group list-group-flush">
                 ${
-                  incorrect_answers.map(choice => `<li class="list-group-item choice" data-choice="${choice}" data-question="${i}">${choice}</li>`).join(' ')
-                }
+          incorrect_answers.map(choice => `<li class="list-group-item choice" data-choice="${choice}" data-question="${i}">${choice}</li>`).join(' ')
+          }
               </ul>
             </div>
           </div>
         `))
       })
-      // $('#game').append('<button id="finishGame" class="btn btn-success btn-large" data-toggle="modal" data-target="results">Finish</button>')
       $('#game').append(`
       <div class="card">
             <div class="card-body">
@@ -124,9 +127,24 @@
         $(event.target).siblings().css({ backgroundColor: 'white' })
         questions[event.target.dataset.question].chosen = event.target.dataset.choice
       } else if (event.target.id === 'finishGame') {
+
         let correct = questions.filter(({ correct_answer, chosen }) => correct_answer === chosen)
         $('#gameResult').text('Great Job!')
         $('#resultCount').text(`You got ${correct.length} out of ${questions.length} questions right!`)
+        questions.forEach(({ question, correct_answer, chosen }) => {
+          if (correct_answer === chosen) {
+            $('#correctResults').append($(`<li class="list-group-item" style="background-color: lightgreen">
+              <p>Question: ${question}</p>
+              <p>You answered: ${chosen}</p>
+              </li>`))
+          } else {
+            $('#incorrectResults').append($(`<li class="list-group-item" style="background-color: crimson">
+              <p>Question: ${question}</p>
+              <p>You answered: ${chosen}</p>
+              <p>Correct Answer: ${correct_answer}</p>
+              </li>`))
+          }
+        })
         $('#results').modal()
       } else if (event.target.id === 'closeResult') {
         questions = []
